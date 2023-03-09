@@ -1,0 +1,13 @@
+Package: lee2016
+Type: Package
+Title: What the Package Does in One 'Title Case' Line
+Version: 1.0
+Date: 2022-03-09
+Author: Your Name
+Encoding: UTF-8
+Maintainer: Your Name <your@email.com>
+Description: One paragraph description of what the package does as one
+        or more full sentences.
+License: GPL (>= 2)
+Depends: shiny, glmnet
+RoxygenNote: 7.2.3
