@@ -25,7 +25,11 @@ a vector of length 2
 Confidence intervals for truncated normal
 }
 \details{
-this function needs improvement.
+this function finds a confidence interval by solving the equation
+\code{ptnorm(x0, mu, sd, low, upp) = alpha/2} or \code{1 - alpha/2}, \code{mu}
+being the unknown.
+
+It corresponds to Theorem 6.1.
 }
 \examples{
 conf.int.tnorm(0)
