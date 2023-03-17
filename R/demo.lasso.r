@@ -9,7 +9,7 @@
 #' x[,2] <- x[,2] + 0.4 * x[,1] 
 #' y <- x %*% c(1,2) + rnorm(40)
 #' y <- y - mean(y)
-#' demo.lasso(x, y, lambda)
+#' demo.lasso(x, y, 25)
 #' @export
 demo.lasso <- function(x, y, lambda) {
   if(ncol(x) != 2) 

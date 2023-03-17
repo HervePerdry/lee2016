@@ -15,5 +15,5 @@ x <- cbind( c(rep(-1, 20), rep(1,20)), runif(40, -1, 1) )
 x[,2] <- x[,2] + 0.4 * x[,1] 
 y <- x \%*\% c(1,2) + rnorm(40)
 y <- y - mean(y)
-demo.lasso(x, y, lambda)
+demo.lasso(x, y, 25)
 }
