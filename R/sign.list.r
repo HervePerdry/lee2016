@@ -1,3 +1,5 @@
+# fonctions qui prennent un vecteur avec des signes +1 -1 et des NA et renvoient
+# la liste des vecteurs de signes qu'on peut obtenir en comblant les NA
 
 # celle ci prend un vecteur et renvoie une liste
 sign.list.0 <- function(S) {

@@ -2,6 +2,7 @@
 
 export(conf.int.tnorm)
 export(demo.lasso)
+export(demo.polyhedra)
 export(demo.tnorm)
 export(dtnorm)
 export(get.eta)
@@ -10,3 +11,5 @@ export(get.linear.constraints)
 export(ptnorm)
 export(qtnorm)
 export(rtnorm)
+export(shiny.polyhedra)
+export(shiny.tnorm)
