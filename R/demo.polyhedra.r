@@ -11,8 +11,7 @@
 #' y <- y - mean(y)
 #' demo.polyhedra(x, y, 25)
 #' @export
-demo.polyhedra <- function(x, y, lambda, xlim, ylim) {
-
+demo.polyhedra <- function(x, y, lambda, xlim, ylim, plot = TRUE) {
 
   p <- 2
   # faire le dessin dans un repère orthonormé
@@ -21,8 +20,9 @@ demo.polyhedra <- function(x, y, lambda, xlim, ylim) {
   sx1 <- sqrt(sum(x[,1]**2))
   sx2 <- sqrt(sum(fit$residuals**2))
   XX <- cbind(x[,1]/sx1, fit$residuals/sx2)
-  a <- lm(x[,2] ~ XX - 1)$coeff
+  if(!plot) return(invisible(XX))
 
+  a <- lm(x[,2] ~ XX - 1)$coeff
   # dans le plan < XX >
   # coordonnees de x[,1] = (sx1, 0)
   # coordonnees de x[,2] = (a1, a2)

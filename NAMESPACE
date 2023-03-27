@@ -3,6 +3,7 @@
 export(conf.int.tnorm)
 export(demo.lasso)
 export(demo.polyhedra)
+export(demo.ridge)
 export(demo.tnorm)
 export(dtnorm)
 export(get.eta)

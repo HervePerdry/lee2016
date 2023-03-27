@@ -1,6 +1,8 @@
 #' @export
 demo.tnorm <- function(x0, mu, sd, low, upp, CI = round(conf.int.tnorm(x0, sd = sd, low = low, upp = upp ),2)) {
-  x <- seq(-5, 5, by = 0.01)
+  x1 <- min(CI[1] - .5*diff(CI), x0 - 5*sd)
+  x2 <- max(CI[2] + .5*diff(CI), x0 + 5*sd)
+  x <- seq(x1, x2, length = 501)
   y <- dtnorm(x, mean = mu, sd = sd, low = low, upp = upp)
   plot( x, dtnorm(x, mean = mu, sd = sd, low = low, upp = upp), type = "n", ylab = "density" )
   lines( CI, c(0,0), lwd = 10, col = "lightblue")

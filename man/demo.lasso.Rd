@@ -4,7 +4,7 @@
 \alias{demo.lasso}
 \title{A small demo of what the lasso does}
 \usage{
-demo.lasso(x, y, lambda)
+demo.lasso(x, y, lambda, xlim = c(-5, 5), ylim = c(-5, 5), add.grad = FALSE)
 }
 \description{
 A small demo of what the lasso does

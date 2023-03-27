@@ -21,7 +21,7 @@ conf.int.tnorm <- function(x0, level = 0.95, alpha = 1 - level, sd = 1, low = -I
     repeat {
       if(is.infinite(k))
         stop("Failed") 
-      R <- try( uniroot(f, x0 + c(-1, 1)*k, alpha = a)$root, TRUE )
+      R <- try( uniroot(f, c(x0) + c(-1, 1)*k, alpha = a)$root, TRUE )
       if(class(R) != "numeric") 
         k <- k*2
       else

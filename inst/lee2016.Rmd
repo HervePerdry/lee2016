@@ -45,11 +45,12 @@ Pour connaître la loi de $\hat\beta_M$, il faut connaître $\sigma^2$, c'est-à
 
 ### Exemple de la régression Ridge
 
-On cherche $\hat\beta$ qui minimise
-\[ || y - X\hat\beta ||_2^2, \> \text{avec } ||\hat\beta||_2^2 \le \text{constante}. \]
 
+$\def\betari{\beta_{\text{ridge}}}$
+$\def\hbetari{\hat\beta_{\text{ridge}}}$
 
-### Le cas du lasso
+On cherche $\hbetari$ qui minimise
+\[ || y - X\beta ||_2^2, \> \text{avec } ||\beta||_2^2 \le \text{constante}. \]
 
 ```{r echo = FALSE, message = FALSE}
 require(lee2016)
@@ -60,13 +61,36 @@ y <- x %*% c(1,2) + rnorm(40)
 y <- y - mean(y)
 lambda.max <- 100
 div(class = "center", renderPlot(
-demo.lasso(x, y, input$lambda, xlim = c(-3,3), ylim = c(-3,3)), height = 470))
+demo.ridge(x, y, input$lambda0, xlim = c(-2,2), ylim = c(-2,2), add.grad = TRUE), height = 470))
+
+div(class = "center", 
+    sliderInput(inputId = "lambda0", label = "lambda:", min = 0, max = lambda.max, value = lambda.max/10, step = lambda.max/100, width = "100%"))
 ```
 
-```{r echo = FALSE}
+Il faut que les gradients de $|| y - X\beta ||_2^2$ et de $||\beta||_2^2$ soient parallèles en $\hbetari$:
+\[ (X'X \hbetari - X'y) \propto \hbetari\]
+ou encore
+\[ (X'X \hbetari - X'y) + \lambda \hbetari = 0 \]
+C'est-à-dire qu'on minimise 
+\[|| y - X\beta ||_2^2 + \lambda ||\beta||_2^2 \]
+pour $\lambda$ bien choisi.
+
+### Le cas du lasso
+
+De la même façon, minimiser
+\[|| y - X\beta ||_2^2 + \lambda ||\beta||_1 \]
+avec  $||\beta||_1 = \sum_i |\beta_i|$ est équivalent à minimiser
+\[ || y - X\beta ||_2^2, \> \text{avec } ||\beta||_1 \le \text{constante}. \]
+
+```{r echo = FALSE, message = FALSE}
+div(class = "center", renderPlot(
+demo.lasso(x, y, input$lambda, xlim = c(-2,2), ylim = c(-2,2), add.grad = TRUE), height = 470))
+
 div(class = "center", 
-    sliderInput(inputId = "lambda", label = "lambda:", min = 0, max = lambda.max, value = lambda.max/4, step = lambda.max/100, width = "100%"))
+    sliderInput(inputId = "lambda", label = "lambda:", min = 0, max = lambda.max, value = lambda.max/10, step = lambda.max/100, width = "100%"))
 ```
+
+Pour les variables actives il faut que le gradient soit parallèle au gradient de $||\beta||_1 = \sum_i |\beta_i|$ (qui vaut $\pm 1$) ; pour les autres, il faut qu'il pointe dans le "cône tangent".
 
 ### Écriture mathématique des conditions de KKT pour le lasso
 
@@ -120,12 +144,10 @@ On a fait la remarque que les conditions de KKT ne dépendent que de la projecti
 renderPlot( { 
   par(mfrow = c(1,2))
   demo.polyhedra(x, y, input$lambda1);
-  demo.lasso(x, y, input$lambda1, xlim = c(-3,3), ylim = c(-3,3))
+  demo.lasso(x, y, input$lambda1, xlim = c(-2,2), ylim = c(-2,2))
   }, 
   height = 470)
-```
 
-```{r echo = FALSE}
 sliderInput(inputId = "lambda1", label = "lambda:", min = 0, max = lambda.max, value = lambda.max/4, step = lambda.max/100, width = "100%")
 ```
 
@@ -140,8 +162,12 @@ La $j$-ème composante s'obtient en multipliant par $e_j'$, donc
 \[ \hat\beta_{M,j} = e'_j (X_M'X_M)^{-1} X_M' y = \eta' y \]
 où $\eta = X_M (X_M'X_M)^{-1} e_j \in\mathbb R^n$ est un vecteur qui appartient à l'espace engendré par les colonnes de $X$. On peut donc l'ajouter sur notre dessin.
 
+Sans le conditionnement sur $M$, la loi de $\hat\beta_{M,j}$ est normale,
+d'espérance $\beta_{M,j}$ et de variance $||\eta||^2 \sigma^2$. Le conditionnement sur $M$ contraint $y$ à vivre dans certains polyhèdres, ce qui se traduit pour $\hat\beta_{M,j}$ comme une contrainte à vivre dans une union de certains intervalles.
+
 ```{r echo = FALSE, fig.height=6, fig.width=6, fig.align='center'}
-lambda <- 15
+div(class = "center", renderPlot( { 
+lambda <- input$lambda2
 XX <- demo.polyhedra(x, y, lambda, xlim = c(-15, 35), ylim=c(-25,25))
 
 eta <- get.eta(x, c(1,2))
@@ -162,12 +188,12 @@ for(I in LI) {
   lines(kappa * gamma[1] + pr.eta[1] * I, kappa * gamma[2] + pr.eta[2] * I, col = 'red')
   lines(pr.eta[1] * I, pr.eta[2] * I, lwd = 6, col = rgb(0,0,1,0.5))
 }
+}, height = 470))
+
+div(class = "center", sliderInput(inputId = "lambda2", label = "lambda:", min = 0, max = 20, value = 10, step = lambda.max/100, width = "100%"))
 ```
 
-Sans le conditionnement sur $M$, la loi de $\hat\beta_{M,j}$ est normale,
-d'espérance $\beta_{M,j}$ et de variance $||\eta||^2 \sigma^2$. Le conditionnement sur $M$ contraint $y$ à vivre dans certains polyhèdres, ce qui se traduit pour $\hat\beta_{M,j}$ comme une contrainte à vivre dans une union de certains intervalles.
-
-+ parler de z, le résidu
+Les intervalles où $\hat\beta_{M,j}$ est contraint à vivre dépendent de $z = y - \eta'y$, le résidu de la projection de $y$ sur $\eta$. Comme $z$ est indépendant de $\eta'y$, on peut conditionner sur $z$.
 
 ## Construire un intervalle de confiance
 
@@ -187,15 +213,44 @@ Si $\theta \mapsto  P_\theta( X \le x_0 )$ est (strictement) monotone, $A$ est u
 
 Ici on prend $x_0 = 0$, $\sigma^2 = 1$.
 ```{r echo = FALSE}
-x0 <- 0
+x0 <- 1
 low <- -Inf 
 upp <- Inf
 sd <- 1
-div(class="center",renderPlot(demo.tnorm(x0, input$mu, sd, low, upp, CI)))
-```
-
-```{r echo = FALSE, warning = FALSE, message = FALSE}
 CI <- round(conf.int.tnorm( x0, alpha = 0.05, sd = sd, low = low, upp = upp ),2)
 
+div(class="center",renderPlot(demo.tnorm(x0, input$mu, sd, low, upp, CI)))
+
 div(class="center",sliderInput(inputId = "mu", label = "mean:", min = CI[1], max = CI[2], value = x0, step = 0.01, width = "100%"))
+```
+
+#### Illustration pour la loi normale tronquée
+
+```{r echo = FALSE}
+low1 <- c(-Inf, 0) 
+upp1 <- c(-1, Inf)
+CI1 <- round(conf.int.tnorm( x0, alpha = 0.05, sd = sd, low = low1, upp = upp1 ),2)
+
+div(class="center",renderPlot(demo.tnorm(x0, input$mu1, sd, low1, upp1, CI1)))
+
+div(class="center",sliderInput(inputId = "mu1", label = "mean:", min = CI1[1], max = CI1[2], value = x0, step = 0.01, width = "100%"))
+```
+
+### Notre intervalle de confiance
+
+```{r echo = FALSE, warning=FALSE, fig.align="center", fig.height=6, fig.width=8}
+ff <- function(lambda) {
+  eta <- get.eta(x, c(1,2))
+  LI <- get.intervals(eta[,1], y, get.linear.constraints(x, c(1,2)), lambda = lambda)
+  low <- sapply(LI, \(I) I[1])
+  upp <- sapply(LI, \(I) I[2])
+  x <- eta[,1] %*% y
+  sd <- sqrt( sum(eta[,1])**2 )   # on a pris sigma^2 = 1
+  conf.int.tnorm(x, alpha = 0.05, sd = sd, low = low, upp = upp )
+}
+LA <- seq(10, 20, length = 101)
+CCI <- sapply(LA, ff)
+plot(LA, CCI[2,], ylim = c(0,5), type = "l", ylab = "",
+     xlab = expression(lambda))
+lines(LA, CCI[1,])
 ```

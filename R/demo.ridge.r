@@ -1,4 +1,4 @@
-#' A small demo of what the lasso does
+#' A small demo of what Ridge does
 #' 
 #' @param x
 #' @param y
@@ -9,17 +9,20 @@
 #' x[,2] <- x[,2] + 0.4 * x[,1] 
 #' y <- x %*% c(1,2) + rnorm(40)
 #' y <- y - mean(y)
-#' demo.lasso(x, y, 25)
+#' demo.ridge(x, y, 25)
 #' @export
-demo.lasso <- function(x, y, lambda, xlim = c(-5,5), ylim = c(-5,5), add.grad = FALSE) {
+demo.ridge <- function(x, y, lambda, xlim = c(-5,5), ylim = c(-5,5), add.grad = FALSE) {
   if(ncol(x) != 2) 
     stop("x should have two columns")
 
-  beta <- coef(glmnet:::glmnet.fit(x, y, weights = rep(1, length(y)), lambda = lambda, intercept = FALSE))[-1]
   # les coeff de la forme quadratique 0.5 || y - X beta ||
   A <- 0.5 * crossprod(x)
   u <- -as.vector(crossprod(x, y))
   c <- 0.5 * sum(y**2)
+  
+  # beta ridge
+  beta <- solve(2*A + lambda*diag(2), -u)
+
   # la valeur prise en beta
   v <- 0.5 * sum( (y - x %*% beta)**2 )
   # la valeur min 
@@ -34,15 +37,14 @@ demo.lasso <- function(x, y, lambda, xlim = c(-5,5), ylim = c(-5,5), add.grad = 
   for(val in v.min * c(1.001, 1.8**(1:10) ))
     lines(contour.fq(val, c, u, A))
   points( beta[1], beta[2], pch = 16 )
-  sb <- sum(beta)
-  # la boule l1
-  if(lambda > 0) lines( c(sb, 0, -sb, 0, sb), c(0, sb, 0, -sb, 0), lty = 1 )
+  # la boule l2
+  if(lambda > 0) {
+    t <- seq(0, 2*pi, length = 501)
+    r <- sqrt(sum(beta**2))
+    lines(r*cos(t), r*sin(t))
+  } 
   # le gradient en beta
   if(add.grad & lambda > 0) {
-    abline( sb, 1, lty = 3, lwd = 0.8)
-    abline( sb, -1, lty = 3, lwd = 0.8)
-    abline(-sb, 1, lty = 3, lwd = 0.8)
-    abline(-sb, -1, lty = 3, lwd = 0.8)
     grad <- 2*A %*% beta + u
     grad <- grad/sqrt(sum(grad**2))
     le <- diff(xlim)/10

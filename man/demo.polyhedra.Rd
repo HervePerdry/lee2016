@@ -4,7 +4,7 @@
 \alias{demo.polyhedra}
 \title{A small demo of the polyhedra constraint result}
 \usage{
-demo.polyhedra(x, y, lambda)
+demo.polyhedra(x, y, lambda, xlim, ylim, plot = TRUE)
 }
 \description{
 A small demo of the polyhedra constraint result
