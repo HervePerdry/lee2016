@@ -11,7 +11,8 @@
 #' y <- y - mean(y)
 #' demo.polyhedra(x, y, 25)
 #' @export
-demo.polyhedra <- function(x, y, lambda) {
+demo.polyhedra <- function(x, y, lambda, xlim, ylim) {
+
 
   p <- 2
   # faire le dessin dans un repère orthonormé
@@ -27,7 +28,9 @@ demo.polyhedra <- function(x, y, lambda) {
   # coordonnees de x[,2] = (a1, a2)
   m <- max(sx1, a)
 
-  plot(0, 0, type = "n", xlim = c(-5,5)*m, ylim = c(-5,5)*m)
+  if(missing(xlim)) xlim <- c(-5,5)*m
+  if(missing(ylim)) ylim <- c(-5,5)*m
+  plot(0, 0, type = "n", xlim = xlim, ylim = ylim, xlab = "", ylab = "")
 
   # les deux vecteurs x1, x2
   arrows(0, 0, sx1, 0, length = 0.1) # x1
@@ -48,4 +51,5 @@ demo.polyhedra <- function(x, y, lambda) {
       draw.borders(A, B, lty = 2, 100*m)
     }
   }
+  return(invisible(XX))
 }

@@ -1,0 +1,201 @@
+---
+runtime: shiny
+output: html_document
+---
+
+<style>
+.center { 
+  margin: auto;
+  width: 50%;
+}
+</style>
+
+# Le lasso et les polyhèdres
+
+## La régression, le lasso, et la question posée
+
+La matrice $X$ est $n \times p$. Le vecteur $y\in\mathbb R^n$ suit une
+loi $\mathcal N(\mu, \sigma^2)$. 
+
+La régression "classique" suppose que $\mu = X\beta$, et estime $\beta$ par la valeur $\hat\beta$ qui minimise 
+\[ {1\over 2} || y - X\beta ||_2^2. \> \> (\beta\in\mathbb R^p) \]
+La valeur de $\hat\beta$ s'obtient en annulant le gradient de cette fonction de $\beta$, qui est
+\[ X'X \beta - X'y  \]
+donc
+\[ \hat\beta = (X'X)^{-1} X'y . \]
+
+Le lasso est une méthode de régression pénalisée qui permet de choisir une solution creuse (sparse). 
+
+Soit $M \subset \{1, \dots, p \}$ le modèle sélectionné (représenté par les indices des variables dites "actives"). L'article **Exact post-selection inference, with application to the lasso** (Lee et al 2016) donne une procédure pour construire un intervalle de confiance sur les élements du vecteur $\beta_M$, qui est défini comme le vecteur qui minimise
+\[ {1\over 2} || \mu - X_M\beta ||_2^2. \> \> (\beta\in\mathbb R^{|M|}) \]
+où $X_M$ est la sous-matrice de $X$ où on n'a gardé que les variables actives. On a donc
+\[ \beta_M = (X_M'X_M)^{-1} X_M' \mu . \]
+
+Il ne s'agit donc pas d'intervalles de confiances sur les "vrais" coefficients $\beta$ (sauf bien sûr si $M$ est le "vrai" modèle).
+
+Pour construire un intervalle de confiance sur $\beta_M$, Lee et al se basent sur 
+\[ \hat\beta_M = (X_M'X_M)^{-1} X_M' y,  \]
+qui est un estimateur de $\beta_M$, mais qui n'est pas l'estimateur du lasso.
+
+L'intervalle de confiance est construit à partir de la loi de $\hat\beta_M$, conditionnellement au fait que le lasso choisit le modèle $M$. 
+
+Pour connaître la loi de $\hat\beta_M$, il faut connaître $\sigma^2$, c'est-à-dire en pratique savoir l'estimer, ce qui n'est facile que si $n < p$. Dans le cas $n < p$, les auteurs affirment qu'on peut obtenir une sur-estimation de $\sigma^2$, ce qui produira des intervalles de confiances "conservatifs".
+
+## Optimisation sous contrainte et conditions de KKT
+
+### Exemple de la régression Ridge
+
+On cherche $\hat\beta$ qui minimise
+\[ || y - X\hat\beta ||_2^2, \> \text{avec } ||\hat\beta||_2^2 \le \text{constante}. \]
+
+
+### Le cas du lasso
+
+```{r echo = FALSE, message = FALSE}
+require(lee2016)
+set.seed(3)
+x <- cbind( c(rep(-1, 20), rep(1,20)), runif(40, -1, 1) )
+x[,2] <- x[,2] + 0.4 * x[,1]
+y <- x %*% c(1,2) + rnorm(40)
+y <- y - mean(y)
+lambda.max <- 100
+div(class = "center", renderPlot(
+demo.lasso(x, y, input$lambda, xlim = c(-3,3), ylim = c(-3,3)), height = 470))
+```
+
+```{r echo = FALSE}
+div(class = "center", 
+    sliderInput(inputId = "lambda", label = "lambda:", min = 0, max = lambda.max, value = lambda.max/4, step = lambda.max/100, width = "100%"))
+```
+
+### Écriture mathématique des conditions de KKT pour le lasso
+
+$\def\betala{\beta_{\text{lasso}}}$
+$\def\hbetala{\hat\beta_{\text{lasso}}}$
+
+Soit $M \subset \{1, \dots, p \}$ l'esemble des indices des variables actives. Leur vecteur de signes est $s \in \{ -1, +1 \}^{|M|}$.
+
+Le vecteur $\hbetala \in \mathbb R^{|M|}$ des coefficients des variables actives vérifie :
+\[ X_M' (X_M \hbetala - y) = -\lambda s, \]
+càd que la dérivée vaut $\pm \lambda$ pour les variables actives, 
+avec $\mathrm{sign}(\hbetala) = s$ ; et il vérifie également
+\[ X_{-M} (X_M \hbetala - y) \in [-\lambda, \lambda], \]
+càd que la dérivée est $\le \lambda$ en valeur absolue pour les autres variables.
+
+**Remarque** Si on ajoute au vecteur $y$ un vecteur orthogonal à toutes les colonnes de $X$, les conditions sont inchangées. Les conditions de KKT ne dépendent que de la projection de $y$ sur les colonnes de $X$.
+
+## Les contraintes "polyhédriques"
+
+À partir des conditions de KKT, on montre que l'ensemble des vecteurs $y$ qui conduisent au choix d'un modèle est un "polyhèdre".
+
+**Proposition 4.2** 
+Pour une valeur de $\lambda$ donnée, le modèle choisi est $M$ avec vecteur de signe $s$, si et seulement si 
+\[ A y \le \lambda \cdot b \]
+où $A$ et $b$ dépendent de $M$ et de $s$.
+
+**Principe de la preuve**
+
+Il faut montrer que l'existence d'une solution $\hbetala$ aux conditions de KKT est équivalente à ensemble d'inégalités de la forme $A_k y \le \lambda b_k$. 
+
+La première condition de KKT donne
+\[ \hbetala = (X'_M X_M)^{-1} (X'_M y - \lambda s).\]
+Il faut $\mathrm{sign}(\hbetala) = s$, ce qui a lieu ssi
+\[ \mathrm{diag}(s)\hbetala > 0 \]
+càd
+\[ 
+\mathrm{diag}(s) (X'_M X_M)^{-1} X'_M y > \lambda \cdot \mathrm{diag}(s) (X'_M X_M)^{-1} s.
+\]
+Ceci donne un premier ensemble d'inégalités.
+
+On réécrit la deuxième condition KKT comme
+\[ X_{-M} (X_M \hbetala - y) > -\lambda \]
+\[ X_{-M} (X_M \hbetala - y) < \lambda \]
+En y substituant la valeur de $\hbetala$, on obtient un deuxième jeu de conditions.
+
+### Dessin des contraintes polyhédriques
+
+On a fait la remarque que les conditions de KKT ne dépendent que de la projection de $y$ sur les colonnes de $X$. C'est également le cas pour les conditions $A y \le \lambda b$ ; ceci permet quand $p = 2$ de dessiner les contraintes "polyhédriques" dans le plan engendré par les colonnes de $X$.
+
+```{r echo = FALSE, message = FALSE}
+renderPlot( { 
+  par(mfrow = c(1,2))
+  demo.polyhedra(x, y, input$lambda1);
+  demo.lasso(x, y, input$lambda1, xlim = c(-3,3), ylim = c(-3,3))
+  }, 
+  height = 470)
+```
+
+```{r echo = FALSE}
+sliderInput(inputId = "lambda1", label = "lambda:", min = 0, max = lambda.max, value = lambda.max/4, step = lambda.max/100, width = "100%")
+```
+
+Pour conditionner par exemple sur $M = \{1,2\}$, il faut prendre l'union des quatre polyhèdres obtenus avec les signes $s = (1, 1)$, $s = (1, -1)$, $s = (-1, 1)$ et $s = (-1, 1)$.
+
+## La loi de $\hat\beta_{M,j}$  est une loi normale tronquée 
+
+On note $\beta_{M,j}$ la $j$-ème composante de $\beta_M \in\mathbb R^{|M|}$, et $\hat\beta_{M,j}$ la $j$-ème composante de 
+\[ \hat\beta_M = (X_M'X_M)^{-1} X_M' y. \]
+
+La $j$-ème composante s'obtient en multipliant par $e_j'$, donc 
+\[ \hat\beta_{M,j} = e'_j (X_M'X_M)^{-1} X_M' y = \eta' y \]
+où $\eta = X_M (X_M'X_M)^{-1} e_j \in\mathbb R^n$ est un vecteur qui appartient à l'espace engendré par les colonnes de $X$. On peut donc l'ajouter sur notre dessin.
+
+```{r echo = FALSE, fig.height=6, fig.width=6, fig.align='center'}
+lambda <- 15
+XX <- demo.polyhedra(x, y, lambda, xlim = c(-15, 35), ylim=c(-25,25))
+
+eta <- get.eta(x, c(1,2))
+# projection eta[,1]
+pr.eta <- lm(eta[,1] ~ XX - 1)$coeff
+# la ligne engendrée par eta[,1]
+abline(0, pr.eta[2]/pr.eta[1], lty = 3)
+
+LI <- get.intervals(eta[,1], y, get.linear.constraints(x, c(1,2)), lambda )
+
+gamma <- c(pr.eta[2], -pr.eta[1]) # orthogonal pr.eta
+yhat <- lm(y ~ XX - 1)$coeff
+kappa <- sum(yhat * gamma)/sum(gamma**2)
+for(I in LI) {
+  I <- I / sum(pr.eta**2)
+  if(I[1] == -Inf) I[1] <- I[2] - 1000
+  if(I[2] == +Inf) I[2] <- I[1] + 1000
+  lines(kappa * gamma[1] + pr.eta[1] * I, kappa * gamma[2] + pr.eta[2] * I, col = 'red')
+  lines(pr.eta[1] * I, pr.eta[2] * I, lwd = 6, col = rgb(0,0,1,0.5))
+}
+```
+
+Sans le conditionnement sur $M$, la loi de $\hat\beta_{M,j}$ est normale,
+d'espérance $\beta_{M,j}$ et de variance $||\eta||^2 \sigma^2$. Le conditionnement sur $M$ contraint $y$ à vivre dans certains polyhèdres, ce qui se traduit pour $\hat\beta_{M,j}$ comme une contrainte à vivre dans une union de certains intervalles.
+
++ parler de z, le résidu
+
+## Construire un intervalle de confiance
+
+### Principe général
+
+On a une distribution à un paramètre $\theta$, par exemple une loi $\mathcal N(\theta, \sigma^2 = 1)$. On a une observation $x_0$. On veut un intervalle de confiance sur $\theta_0$, la vraie valeur de $\theta$.
+
+\[ A= \{ \theta : \mathbb P_\theta( X \le x_0 ) \in [0.025, 0.975] \} \] 
+
+Alors $\theta_0 \in A$ ssi $\mathbb P_{\theta_0}( X \le x_0 ) \in [0.025, 0.975]$, ce qui se produit avec une probabilité $0.95$ :
+\[ \mathbb P_{\theta_0}(\theta_0 \in A) = 0.95. \]
+
+Si $\theta \mapsto  P_\theta( X \le x_0 )$ est (strictement) monotone, $A$ est un intervalle $[\theta_L, \theta_U]$ avec 
+\[ P_{\theta_L}( X \le x_0 ) = 0.025 \text{ et } P_{\theta_U}( X \le x_0 ) = 0.975 \]
+
+#### Illustration pour la loi normale standard :
+
+Ici on prend $x_0 = 0$, $\sigma^2 = 1$.
+```{r echo = FALSE}
+x0 <- 0
+low <- -Inf 
+upp <- Inf
+sd <- 1
+div(class="center",renderPlot(demo.tnorm(x0, input$mu, sd, low, upp, CI)))
+```
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+CI <- round(conf.int.tnorm( x0, alpha = 0.05, sd = sd, low = low, upp = upp ),2)
+
+div(class="center",sliderInput(inputId = "mu", label = "mean:", min = CI[1], max = CI[2], value = x0, step = 0.01, width = "100%"))
+```

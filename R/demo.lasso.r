@@ -11,7 +11,7 @@
 #' y <- y - mean(y)
 #' demo.lasso(x, y, 25)
 #' @export
-demo.lasso <- function(x, y, lambda) {
+demo.lasso <- function(x, y, lambda, xlim = c(-5,5), ylim = c(-5,5)) {
   if(ncol(x) != 2) 
     stop("x should have two columns")
 
@@ -26,7 +26,7 @@ demo.lasso <- function(x, y, lambda) {
   v.min <- sum(lm(y ~ x - 1)$residuals**2)/2; 
 
   if(lambda == 0) v <- v * 1.001 # pour éviter que contour.fq refuse le tracé
-  plot(contour.fq(v, c, u, A), type = "l", xlim = c(-5,5), ylim = c(-5,5), asp = 1, col = "red", 
+  plot(contour.fq(v, c, u, A), type = "l", xlim = xlim, ylim = ylim, asp = 1, col = "red", 
        xlab = expression(beta[1]), ylab = expression(beta[2]))
   # le repère
   abline(h = 0, v = 0, lty = 2)
