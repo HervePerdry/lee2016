@@ -13,6 +13,8 @@ NULL
 #' @rdname TNorm
 #' @export
 dtnorm <- function(x, mean = 0, sd = 1, low = -Inf, upp = +Inf) {
+  if(length(x) > 1)
+    return(sapply(x, dtnorm, mean = mean, sd = sd, low = low, upp = upp))
   check.interval(low, upp)
   A <- sum(pnorm(upp, mean, sd) - pnorm(low, mean, sd))
   I <- find.interval(x, low, upp)

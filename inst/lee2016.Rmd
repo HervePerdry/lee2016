@@ -39,7 +39,7 @@ qui est un estimateur de $\beta_M$, mais qui n'est pas l'estimateur du lasso.
 
 L'intervalle de confiance est construit à partir de la loi de $\hat\beta_M$, conditionnellement au fait que le lasso choisit le modèle $M$. 
 
-Pour connaître la loi de $\hat\beta_M$, il faut connaître $\sigma^2$, c'est-à-dire en pratique savoir l'estimer, ce qui n'est facile que si $n < p$. Dans le cas $n < p$, les auteurs affirment qu'on peut obtenir une sur-estimation de $\sigma^2$, ce qui produira des intervalles de confiances "conservatifs".
+Pour connaître la loi de $\hat\beta_M$, il faut connaître $\sigma^2$, c'est-à-dire en pratique savoir l'estimer, ce qui n'est facile que si $n > p$. Dans le cas $n < p$, les auteurs affirment qu'on peut obtenir une sur-estimation de $\sigma^2$, ce qui produira des intervalles de confiances "conservatifs".
 
 ## Optimisation sous contrainte et conditions de KKT
 
@@ -236,7 +236,11 @@ div(class="center",renderPlot(demo.tnorm(x0, input$mu1, sd, low1, upp1, CI1)))
 div(class="center",sliderInput(inputId = "mu1", label = "mean:", min = CI1[1], max = CI1[2], value = x0, step = 0.01, width = "100%"))
 ```
 
-### Notre intervalle de confiance
+## Notre intervalle de confiance
+
+On revient au problème de l'intervalle de confiance pour la première variable, sachant que le modèle sélectionné est $M = \{1, 2 \}$, ce qui se produit pour $\lambda \le 20$ environ.
+
+L'intervalle de confiance ne dépend pas que de $M$ mais aussi de $\lambda$, qui détermine la troncature de la loi normale.
 
 ```{r echo = FALSE, warning=FALSE, fig.align="center", fig.height=6, fig.width=8}
 ff <- function(lambda) {
@@ -244,13 +248,16 @@ ff <- function(lambda) {
   LI <- get.intervals(eta[,1], y, get.linear.constraints(x, c(1,2)), lambda = lambda)
   low <- sapply(LI, \(I) I[1])
   upp <- sapply(LI, \(I) I[2])
-  x <- eta[,1] %*% y
+  xo <- as.vector(eta[,1] %*% y)
   sd <- sqrt( sum(eta[,1])**2 )   # on a pris sigma^2 = 1
-  conf.int.tnorm(x, alpha = 0.05, sd = sd, low = low, upp = upp )
+  CI <- conf.int.tnorm(xo, alpha = 0.05, sd = sd, low = low, upp = upp)
+  CI
 }
-LA <- seq(10, 20, length = 101)
+LA <- seq(15, 20.1, length = 201)
 CCI <- sapply(LA, ff)
-plot(LA, CCI[2,], ylim = c(0,5), type = "l", ylab = "",
-     xlab = expression(lambda))
-lines(LA, CCI[1,])
+plot(LA, CCI[2,], ylim = c(0,5), type = "l", ylab = "", xlab = expression(lambda), lty = 2)
+lines(LA, CCI[1,], lty = 3)
+legend("topleft", lty = 3:2, legend = c("lower bound", "upper bound"), bty = "n")
 ```
+
+Le comportement quand $\lambda$ s'approche de la valeur limite est dû au fait que le bord de l'intervalle où vit $\hat\beta_{M,1}$ se rapproche de la valeur observée. Cela correspond à un coefficient $\hat\beta_{\text{lasso}, 1}$ qui s'approche de $0$. C'est probablement la circonstance type dans laquelle on a de grands intervalles de confiance. Est-ce une caractéristique désirable de la méthode?

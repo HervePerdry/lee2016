@@ -15,9 +15,11 @@
 #' conf.int.tnorm(0, low = -1, upp = +Inf)
 #' @export
 conf.int.tnorm <- function(x0, level = 0.95, alpha = 1 - level, sd = 1, low = -Inf, upp = +Inf) {
+  if(is.na(find.interval(x0, low, upp)))
+    return(c(NA, NA))
   f <- function(mu, alpha) ptnorm(x0, mu, sd, low, upp) - alpha
   sol <- function(a) { 
-    k <- 4;
+    k <- 2*sd;
     repeat {
       if(is.infinite(k))
         stop("Failed") 

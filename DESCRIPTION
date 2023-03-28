@@ -1,13 +1,13 @@
 Package: lee2016
 Type: Package
-Title: What the Package Does in One 'Title Case' Line
+Title: Lee 2016 paper on post selection inference with the lasso
 Version: 1.0
 Date: 2022-03-09
-Author: Your Name
+Author: Hervé Perdry
 Encoding: UTF-8
-Maintainer: Your Name <your@email.com>
-Description: One paragraph description of what the package does as one
-        or more full sentences.
+Maintainer: Hervé Perdry <herve.perdry@universite-paris-saclay.fr>
+Description: Implements functions corresponding to the various part of the paper,
+    and includes a presentation with shiny apps.
 License: GPL (>= 2)
-Depends: shiny, glmnet
+Depends: shiny, glmnet, rmarkdown
 RoxygenNote: 7.2.3
