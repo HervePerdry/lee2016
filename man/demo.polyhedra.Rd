@@ -16,4 +16,7 @@ x[,2] <- x[,2] + 0.4 * x[,1]
 y <- x \%*\% c(1,2) + rnorm(40)
 y <- y - mean(y)
 demo.polyhedra(x, y, 25)
+# an example with colinearity
+x <- cbind(x, x[,1] - x[,2])
+demo.polyhedra(x, y, 25)
 }

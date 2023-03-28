@@ -15,9 +15,12 @@ draw.borders.i <- function(A, B, i, MAX = 100, ...) {
   # inégalités sur T
   Ac <- A[-i,,drop = FALSE] %*% v
   B2 <- B[-i] - b * A[-i,,drop = FALSE] %*% u / sum(u**2)
+
+  # regle les erreurs d'arrondi
+  Ac[ abs(Ac) < 1e-10 ] <- 0
   
   if(any(Ac == 0))
-    if( B2[Ac == 0] < 0 ) stop("problème ?")
+    if( any(B2[Ac == 0] < 0) ) return(); # condition non vérifiable
   LT <- suppressWarnings(max( (B2/Ac)[Ac < 0] ))
   UT <- suppressWarnings(min( (B2/Ac)[Ac > 0] ))
   LT <- ifelse(is.infinite(LT), -MAX, LT)

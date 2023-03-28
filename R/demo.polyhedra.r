@@ -10,10 +10,15 @@
 #' y <- x %*% c(1,2) + rnorm(40)
 #' y <- y - mean(y)
 #' demo.polyhedra(x, y, 25)
+#' # an example with colinearity
+#' x <- cbind(x, x[,1] - x[,2])
+#' demo.polyhedra(x, y, 25)
 #' @export
 demo.polyhedra <- function(x, y, lambda, xlim, ylim, plot = TRUE) {
 
-  p <- 2
+  p <- ncol(x)
+  if(p < 2) stop("Please give at least to variables")
+
   # faire le dessin dans un repère orthonormé
   fit <- lm(x[,2] ~ x[,1] - 1)
 
@@ -28,13 +33,26 @@ demo.polyhedra <- function(x, y, lambda, xlim, ylim, plot = TRUE) {
   # coordonnees de x[,2] = (a1, a2)
   m <- max(sx1, a)
 
+  A <- cbind(c(sx1, 0), a)
+  if(p > 2) {
+    for(k in 3:p) {
+      fit <- lm(x[,k] ~ XX - 1)
+      if(max(abs(fit$res)) > 1e-8) 
+        stop("I can only plot things in the plane")
+      a1 <- fit$coeff
+      m <- max(m, a1)
+      A <- cbind(A, a1)
+    }
+  }
+
   if(missing(xlim)) xlim <- c(-5,5)*m
   if(missing(ylim)) ylim <- c(-5,5)*m
   plot(0, 0, type = "n", xlim = xlim, ylim = ylim, xlab = "", ylab = "")
 
-  # les deux vecteurs x1, x2
-  arrows(0, 0, sx1, 0, length = 0.1) # x1
-  arrows(0, 0, a[1], a[2], length = 0.1) # x2
+  # les vecteurs 
+  for(k in 1:p) {
+    arrows(0, 0, A[1,k], A[2, k], length = 0.1)
+  }
 
   # la projection de y
   yhat <- lm(y ~ XX - 1)$coeff
@@ -43,6 +61,7 @@ demo.polyhedra <- function(x, y, lambda, xlim, ylim, plot = TRUE) {
   # enumeration des modèles
   list.M <- model.list(p)
   for(M in list.M) {
+    if(length(M) > 2) next; # ceux là ne sont pas possibles !!!
     for(S in sign.list( rep(NA, length(M)) )) {
       # on trace le polyhedre qui correspond à la contrainte M, S
       lic <- get.linear.constraints(x, M, S)
